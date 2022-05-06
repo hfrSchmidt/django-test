@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 
-from .models import Question
+from .models import Choice, Question
 
 class QuestionModelTests(TestCase):
 
@@ -45,6 +45,18 @@ def create_questions(question_text, days):
     """
     time = timezone.now() + datetime.timedelta(days=days)
     return Question.objects.create(question_text=question_text, pub_date=time)
+
+def create_choices_for_question(question, choices):
+    """
+    Create a set of choices with votes for a question.
+    """
+    choice_list = []
+    for choice in choices:
+        choice_list.append(Choice.objects.create(
+            choice_text=choice['choice_text'],
+            votes=choice['votes'],
+            question=question ))
+    return choice_list
 
 
 class QuestionIndexViewTests(TestCase):
@@ -129,3 +141,58 @@ class QuestionDetailViewTests(TestCase):
         url = reverse('polls:detail', args=(past_question.id,))
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
+
+
+class QuestionResultsViewTests(TestCase):
+
+    def test_future_question(self):
+        """
+        The results view of a question set in the future should return a
+        404 not found page.
+        """
+        future_question = create_questions(question_text="Future Question.", days=30)
+        url = reverse('polls:results', args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+    
+    def test_past_question(self):
+        """
+        The results view of a question set in the past should return 
+        the polls's results.
+        """
+        past_question = create_questions(question_text="Past Question.", days=-5)
+        past_question_choice_set = past_question.choice_set.all()
+        url = reverse('polls:results', args=(past_question.id,))
+        response = self.client.get(url)
+        
+        for choice in past_question_choice_set:
+            self.assertContains(response, choice.choice_text)
+            self.assertContains(response, choice.votes)
+
+        self.assertContains(response, past_question.question_text)
+
+    def test_choice_creation(self):
+        """
+        Ensure choices are added correctly to a question
+        """
+        question = create_questions(question_text="What is going on?", days=-5)
+        choice_list = [
+            {
+                'choice_text': 'Nothing.',
+                'votes': 20
+            },
+            {
+                'choice_text': 'Nothing but in green.',
+                'votes': 31
+            }
+        ]
+        create_choices_for_question(question=question, choices=choice_list)
+        url = reverse('polls:results', args=(question.id,))
+        response = self.client.get(url)
+
+        self.assertContains(response, question.question_text)
+
+        for choice in choice_list:
+            self.assertContains(response, choice['choice_text'])
+            self.assertContains(response, choice['votes'])
+    
