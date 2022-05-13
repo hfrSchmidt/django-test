@@ -5,10 +5,10 @@ FROM python:3
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-WORKDIR /django_test_code/
+WORKDIR /app/
 
-COPY requirements.txt /django_test_code/
+COPY requirements.txt /app/
 
 RUN pip install -r requirements.txt
 
-COPY . /django_test_code/
+COPY . /app/
