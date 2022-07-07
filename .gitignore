@@ -133,3 +133,6 @@ data/db/
 
 # Apple .DS_store
 .DS_Store
+
+# collected static files
+staticfiles/
