@@ -5,9 +5,9 @@ services:
       context: .
       dockerfile: .devcontainer/Dockerfile
     volumes:
-      # Mounts the project folder to '/workspace'. While this file is in .devcontainer,
+      # Mounts the project folder to '/app'. While this file is in .devcontainer,
       # mounts are relative to the first file in the list, which is a level up.
-      - .:/workspace:cached
+      - .:/app/:cached
 
     # [Optional] Required for ptrace-based debuggers like C++, Go, and Rust
     # cap_add:
